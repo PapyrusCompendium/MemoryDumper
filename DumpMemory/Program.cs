@@ -16,22 +16,23 @@ namespace DumpMemory
 			Process selectedProc = Process.GetProcessById(SelectProcess());
 
 			NativeMethods.MemoryInformation[] memRegions = NativeMethods.EnumerateMemRegions(selectedProc, i => true).ToArray();
+			void* ProcessHandle = NativeMethods.OpenAllAccessProcess(selectedProc);
 
 			Log.Info($"Found {memRegions.Length} Memory Region(s)");
 
 			FileStream fileStream = new FileStream($"{selectedProc.ProcessName}.bin", FileMode.Create);
 			for(int x = 0; x < memRegions.Length; x++)
-				WriteDump(memRegions[x], selectedProc, fileStream);
+				WriteDump(memRegions[x], ProcessHandle, fileStream);
 			fileStream.Close();
 
 			FileInfo fileInfo = new FileInfo($"{selectedProc.ProcessName}.bin");
 			Log.Info($"Wrote {memRegions.Length} Memory Region(s) to Disk, {fileInfo.Length} Bytes to Disk.");
 		}
 
-		private static unsafe void WriteDump(NativeMethods.MemoryInformation memoryInformation, Process selectedProc, FileStream fileStream)
+		private static unsafe void WriteDump(NativeMethods.MemoryInformation memoryInformation, void *processHandle, FileStream fileStream)
 		{
 			int bytesRead = 0;
-			byte[] memoryRead = NativeMethods.ReadMemory(selectedProc, memoryInformation.BaseAddress, memoryInformation.RegionSize, out bytesRead);
+			byte[] memoryRead = NativeMethods.ReadMemory(processHandle, memoryInformation.BaseAddress, memoryInformation.RegionSize, out bytesRead);
 			fileStream.Write(memoryRead, 0, memoryRead.Length);
 		}
 

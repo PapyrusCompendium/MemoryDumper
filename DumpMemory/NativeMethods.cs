@@ -99,12 +99,14 @@ namespace DumpMemory
         }
 
 
-        public static byte[] ReadMemory(Process proc, int startAddress, int length, out int bytesRead)
+        public static void *OpenAllAccessProcess(Process process) =>
+            OpenProcess((int)(HandlePrivileges.PROCESS_QUERY_INFORMATION | HandlePrivileges.PROCESS_WM_READ), false, process.Id);
+
+        public static byte[] ReadMemory(void *processHandle, int startAddress, int length, out int bytesRead)
         {
             try
             {
                 byte[] buffer = new byte[length];
-                void* processHandle = OpenProcess(PROCESS_ALL_ACCESS, false, proc.Id);
 
                 int i = 0;
                 if (!ReadProcessMemory(processHandle, startAddress, buffer, length, ref i))
